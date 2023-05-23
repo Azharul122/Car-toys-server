@@ -4,15 +4,28 @@ const cars=require('./category.json')
 require('dotenv').config()
 
 const app = express();
+const port = process.env.PORT || 5000
 
-app.use(cors());
+
+const corsOptions ={
+  origin:'*', 
+  credentials:true,
+  optionSuccessStatus:200,
+}
+
+app.use(cors(corsOptions))
+
+
+
+
+
+
 app.use(express.json());
 
 // console.log(process.env.DB_USER);
 // console.log(process.env.DB_KEY);
 
 
-const port = process.env.PORT || 5000
 
 app.get('/', (req, res) => {
     res.send("running")
@@ -52,7 +65,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+
 
     const toyCollection=client.db('toyDB').collection('toy')
 
@@ -69,11 +82,13 @@ async function run() {
       res.send(result)
   })
 
-  app.put('toy/:id',async (req,res)=>{
+  app.put('/toyUpdate/:id',async (req,res)=>{
     const id=req.params.id;
     const query={_id:new ObjectId(id)}
+    console.log(id)
     const options={upsert:true}
     const toy=req.body;
+    console.log(toy)
     const updatedToy={
       $set:{
         quantity: toy.quantity,
@@ -81,7 +96,7 @@ async function run() {
         description: toy.description
       }
     }
-    const result=await toyCollection.updateOne(query,updatedToy,options);
+    const result=await toyCollection.updateOne(query,updatedToy);
     res.send(result)
 
   })
@@ -92,7 +107,7 @@ async function run() {
     const result=await toyCollection.deleteOne(query)
     res.send(result)
   })
-    app.post('/toys',async (req,res)=>{
+    app.post('/toys/',async (req,res)=>{
       const newToy=req.body;
       console.log(newToy)
       const result=await toyCollection.insertOne(newToy)
